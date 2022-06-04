@@ -1,6 +1,4 @@
-BOTS.json
-RAIDED_GUILDS.json
-TOKENS.json
+raidData/
 env/
 node_modules/
 parse.py
