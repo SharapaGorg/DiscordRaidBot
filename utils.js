@@ -1,13 +1,14 @@
-const { faker } = require('@faker-js/faker');
+import { faker} from '@faker-js/faker'
+import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 
 function getRandomItem(items) {
-    return items[Math.floor(Math.random()*items.length)]
+    return items[Math.floor(Math.random() * items.length)]
 }
 
 function changeAllNicks(members, delay, nicks) {
     for (let member of members) {
         setTimeout(() => {
-            member[1].setNickname(getRandomItem(nicks)).catch(error => {})
+            member[1].setNickname(getRandomItem(nicks)).catch(error => { })
         }, delay)
     }
 }
@@ -24,6 +25,13 @@ function spamALlChannels(channels, delay) {
     }
 }
 
-module.exports.getRandomItem = getRandomItem
-module.exports.changeAllNicks = changeAllNicks
-module.exports.spamALlChannels = spamALlChannels
+function exitVoiceChannel(guildId) {
+    let currentConnection = getVoiceConnection(guildId)
+
+    try {
+        currentConnection.destroy()
+    }
+    catch (e) { }
+}
+
+export default {getRandomItem, changeAllNicks, spamALlChannels, exitVoiceChannel}

