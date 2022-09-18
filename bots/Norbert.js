@@ -7,14 +7,14 @@ const genDir = '../genData'
 import fetch from 'node-fetch'
 
 import { Client, Intents } from 'discord.js'
-import { joinVoiceChannel } from '@discordjs/voice'
+import { joinVoiceChannel, createAudioPlayer, createAudioResource } from '@discordjs/voice'
 
-import dotaShit from '../genData/dotaShit.json' assert {type: 'json'}
-import animeShit from '../genData/animeShit.json' assert {type: 'json'}
-import shutUp from '../genData/SHUT_UP.json' assert {type: 'json'}
+import dotaShit from '../genData/dotaShit.json' assert { type: 'json' }
+import animeShit from '../genData/animeShit.json' assert { type: 'json' }
+import shutUp from '../genData/SHUT_UP.json' assert { type: 'json' }
 
-import GUILDS from '../raidData/RAIDED_GUILDS.json' assert {type: 'json'}
-import IGNORE_CHANNELS from '../raidData/IGNORE_CHANNELS.json' assert {type: "json"}
+import GUILDS from '../raidData/RAIDED_GUILDS.json' assert { type: 'json' }
+import IGNORE_CHANNELS from '../raidData/IGNORE_CHANNELS.json' assert { type: "json" }
 
 import utils from '../utils.js'
 
@@ -67,7 +67,6 @@ function launch(token, delay) {
                 const options = message.split(' ')
                 const guild = client.guilds.cache.get(GUILDS[0])
 
-
                 return { options, guild }
             }
             else {
@@ -87,7 +86,6 @@ function launch(token, delay) {
 
             utils.changeAllNicks(guildMembers, delay, animeShit)
         },
-
         'changeNicksInf': (message) => {
             const base = command.options(message);
             const guildMembers = base.guild.members.cache
@@ -185,12 +183,30 @@ function launch(token, delay) {
                 utils.spamALlChannels(channels, delay)
             }, 1)
         },
+        'playSomeMusic': (message) => {
+            const base = command.options(message)
+            const guild = base.options[1]
+
+            const channel = client.channels.cache.get("1013745525289406555")
+            let connection = joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+            })
+
+            const resource = createAudioResource('D:\\Dev\\Jokes\\DsRaidBot\\static\\Rick.mp3')
+            const player = createAudioPlayer()
+            player.play(resource)
+
+            connection.subscribe(player)
+
+        },
         'tormentWithSound': (message) => {
             const base = command.options(message)
             const victim = base.options[1]
 
             // const channel = base.guild.channels.cache.get("721854300707487774")
-            const channel = client.channels.cache.get("723290894391967848")
+            const channel = client.channels.cache.get("1018151228456321147")
 
             setInterval(() => {
                 setTimeout(() => {
@@ -232,6 +248,6 @@ function launch(token, delay) {
 }
 
 
-const delay = 800
-const token = 'NzI1MDk1NjU2NTEwOTgwMTA2.GvuLDG.TvG5ZRjKzOxTQF0I7hKswG3sOY37MuaDywqBU8'
+const delay = 700
+const token = 'NzI1MDk1NjU2NTEwOTgwMTA2.G8y56O.le-BHHNmia8Yc4qS6WXw42chNO4-5MFjKAFOPw'
 commandHanlder = launch(token, delay)
