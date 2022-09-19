@@ -17,7 +17,8 @@ Prompt.setCompletion(
         'deleteChannels',
         'deleteRoles',
         'tormentWithSound',
-        'playSomeMusic'
+        'playSomeMusic',
+        'banana'
     ])
 
 let lastCommand = ''

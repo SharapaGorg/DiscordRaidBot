@@ -53,7 +53,7 @@ function launch(token, delay) {
                         return
                     }
 
-                    command[firstWord](option)
+                    command[firstWord](option, data.time)
                 })
                 .catch((err) => {
                     console.warn(err)
@@ -183,30 +183,38 @@ function launch(token, delay) {
                 utils.spamALlChannels(channels, delay)
             }, 1)
         },
-        'playSomeMusic': (message) => {
+        'playSomeMusic': (message, time) => {
             const base = command.options(message)
-            const guild = base.options[1]
+            const channelID = base.options[1]
+            const track = base.options[2]
 
-            const channel = client.channels.cache.get("1013745525289406555")
+            const channel = client.channels.cache.get(channelID)
             let connection = joinVoiceChannel({
                 channelId: channel.id,
                 guildId: channel.guild.id,
                 adapterCreator: channel.guild.voiceAdapterCreator,
             })
 
-            const resource = createAudioResource('D:\\Dev\\Jokes\\DsRaidBot\\static\\Rick.mp3')
+            let path = track;
+            let paths = ['minions', 'minions1']
+            
+            if (!path) {
+                path = utils.getRandomItem(paths)
+            }
+
+            console.log(path)
+
+            const resource = createAudioResource(`D:\\Dev\\Jokes\\DsRaidBot\\static\\${path}.mp3`)
             const player = createAudioPlayer()
             player.play(resource)
 
             connection.subscribe(player)
-
         },
         'tormentWithSound': (message) => {
             const base = command.options(message)
             const victim = base.options[1]
 
-            // const channel = base.guild.channels.cache.get("721854300707487774")
-            const channel = client.channels.cache.get("1018151228456321147")
+            const channel = client.channels.cache.get(victim)
 
             setInterval(() => {
                 setTimeout(() => {
@@ -233,9 +241,14 @@ function launch(token, delay) {
         }
 
         if (firstWord in command) {
-            command[firstWord](message)
+            try {
+                command[firstWord](message)
+                channel.send(`[${firstWord}] successfully executed`);
+            }
+            catch (e) {
+                console.warn("Failed for some reason")
+            }
 
-            channel.send(`[${firstWord}] successfully executed`);
         }
         else if (message.content.indexOf('^') === -1) {
             channel.send(utils.getRandomItem(shutUp));
@@ -249,5 +262,5 @@ function launch(token, delay) {
 
 
 const delay = 600
-const token = 'NzI1MDk1MzY2NjkyOTYyNDE1.G6uc_T.GJKegWm_fl7LDatjdVezpVC_59A5PQLi_-zi1U'
+const token = 'NzI1MDk1MzY2NjkyOTYyNDE1.G_3pUA.k_gZUWseZyne-odi-9BnyCflImkYtvb6hfMa6o'
 commandHanlder = launch(token, delay)
