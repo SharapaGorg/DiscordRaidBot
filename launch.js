@@ -15,6 +15,7 @@ catch (e) {
     console.warn(e)
 }
 
+let indexCounter = 1
 let counter = 0
 for (let nickname of Object.keys(bots)) {
     const token = bots[nickname]
@@ -22,9 +23,10 @@ for (let nickname of Object.keys(bots)) {
 
     let content = layout
 
+    content += `const index = ${indexCounter}\n`
     content += `const delay = ${counter}\n`
     content += `const token = '${token}'\n`
-    content += 'commandHanlder = launch(token, delay)'
+    content += 'commandHanlder = launch(token, delay, index)'
 
     fs.writeFile(`./bots/${fileName}`, content, (err) => {
         if (err) {
@@ -33,6 +35,7 @@ for (let nickname of Object.keys(bots)) {
     })
 
     counter += 100
+    indexCounter++
 }
 
 console.log('Bot layouts successfully prepared [+]')
